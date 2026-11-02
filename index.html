@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Màn sao cưới — Ngọc Thịnh &amp; Châu Khanh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;600;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --gold: #d9b45c;
+        --gold-bright: #f0d48a;
+        --gold-soft: rgba(217, 180, 92, 0.55);
+        --ivory: #f8f2e2;
+        --ivory-dim: rgba(248, 242, 226, 0.72);
+        --night-1: #010208;
+        --night-2: #03040c;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-family: "Playfair Display", Georgia, serif;
+      }
+
+      /* ---------- Stage: fixed 16:9 LED frame ---------- */
+      .stage {
+        position: relative;
+        width: min(100vw, calc(100dvh * 16 / 9));
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background:
+          radial-gradient(120% 90% at 50% 0%, #05070f 0%, transparent 55%),
+          radial-gradient(90% 70% at 85% 100%, #060512 0%, transparent 55%),
+          radial-gradient(80% 60% at 10% 100%, #04060d 0%, transparent 55%),
+          linear-gradient(180deg, var(--night-2) 0%, var(--night-1) 60%, #000000 100%);
+        container-type: inline-size;
+      }
+      #sky {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .constellations {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ---------- Constellation drawing ---------- */
+      .c-line {
+        stroke: var(--gold);
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        fill: none;
+        opacity: 0.95;
+        filter: drop-shadow(0 0 6px rgba(217, 180, 92, 0.7));
+      }
+      /* Draw-in: JS sets each line's dash to its real length, then .play
+         transitions the offset to 0 with a per-line delay. */
+      .constellations.play .c-line {
+        transition: stroke-dashoffset 1.15s cubic-bezier(0.6, 0, 0.3, 1);
+        transition-delay: var(--d, 0s);
+        stroke-dashoffset: 0 !important;
+      }
+      .constellations.is-drawn .c-line {
+        stroke-dasharray: 7 9;
+      }
+      .c-star {
+        fill: #fff6dd;
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: starIn 0.7s ease-out forwards, starPulse 2.6s ease-in-out infinite;
+        animation-delay: var(--d, 0s), calc(var(--d, 0s) + 3.6s);
+        filter: drop-shadow(0 0 7px rgba(240, 212, 138, 1)) drop-shadow(0 0 20px rgba(217, 180, 92, 0.65));
+      }
+      .c-star.small { filter: drop-shadow(0 0 5px rgba(240, 212, 138, 0.9)) drop-shadow(0 0 10px rgba(217, 180, 92, 0.4)); }
+      .c-halo {
+        fill: rgba(240, 212, 138, 0.14);
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: starIn 0.9s ease-out forwards, haloPulse 2.6s ease-in-out infinite;
+        animation-delay: var(--d, 0s), calc(var(--d, 0s) + 3.6s);
+      }
+      @keyframes starPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.28); }
+      }
+      @keyframes haloPulse {
+        0%, 100% { opacity: 0.55; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.35); }
+      }
+      .c-sparkle {
+        stroke: var(--gold-bright);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: starIn 0.9s ease-out forwards, sparklePulse 2.2s ease-in-out infinite;
+        animation-delay: var(--d, 0s), calc(var(--d, 0s) + 3.6s);
+        filter: drop-shadow(0 0 7px rgba(240, 212, 138, 0.9));
+      }
+      @keyframes sparklePulse {
+        0%, 100% { opacity: 0.55; transform: scale(0.82) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.18) rotate(8deg); }
+      }
+      .c-label {
+        font-family: "Playfair Display", Georgia, serif;
+        font-weight: 600;
+        fill: var(--gold-bright);
+        text-anchor: middle;
+        letter-spacing: 0.42em;
+        opacity: 0;
+        animation: fadeIn 1.4s ease-out forwards;
+        filter: drop-shadow(0 0 8px rgba(217, 180, 92, 0.45));
+      }
+      @keyframes draw { to { stroke-dashoffset: 0; } }
+      @keyframes starIn {
+        0% { opacity: 0; transform: scale(0.2); }
+        60% { opacity: 1; transform: scale(1.35); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      @keyframes fadeIn { to { opacity: 1; } }
+
+      /* ---------- Center lettering ---------- */
+      .center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 6cqw;
+        pointer-events: none;
+      }
+      .rise {
+        opacity: 0;
+        transform: translateY(2.2cqw);
+        animation: rise 1.6s cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+        animation-delay: var(--d, 0s);
+      }
+      @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+      .monogram { width: 15cqw; max-width: 290px; height: auto; margin-bottom: 1.2cqw; }
+      .monogram .inf {
+        fill: none;
+        stroke: var(--gold);
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        animation: draw 2.2s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+        animation-delay: 0.7s;
+        filter: drop-shadow(0 0 7px rgba(217, 180, 92, 0.65));
+      }
+      .monogram text {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 30px;
+        font-weight: 500;
+        fill: var(--gold-bright);
+        text-anchor: middle;
+        letter-spacing: 0.06em;
+      }
+      .monogram .fade-el {
+        opacity: 0;
+        animation: fadeIn 1.2s ease-out forwards;
+        animation-delay: 2.4s;
+      }
+
+      .eyebrow {
+        --base: 2.5s;
+        --step: 0.05s;
+        margin: 0 0 0.6cqw;
+        font-size: 1.55cqw;
+        font-weight: 500;
+        letter-spacing: 0.58em;
+        text-indent: 0.58em; /* balances the tracking */
+        color: var(--gold-bright);
+        text-transform: uppercase;
+      }
+      .names {
+        --base: 3.1s;
+        --step: 0.065s;
+        margin: 0;
+        font-family: "Dancing Script", "Great Vibes", cursive;
+        font-weight: 700;
+        font-size: 8.2cqw;
+        line-height: 1.25;
+        color: var(--ivory);
+        text-shadow:
+          0 0 18px rgba(240, 212, 138, 0.28),
+          0 0 46px rgba(217, 180, 92, 0.16);
+        white-space: nowrap;
+      }
+      .names .amp {
+        font-size: 0.62em;
+        color: var(--gold-bright);
+        padding: 0 0.12em;
+        vertical-align: 0.08em;
+      }
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 1.1cqw;
+        margin: 2cqw 0 1.5cqw;
+        width: 34cqw;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+      }
+      .divider::before { background: linear-gradient(90deg, transparent, var(--gold-soft)); }
+      .divider::after { background: linear-gradient(90deg, var(--gold-soft), transparent); }
+      .divider .diamond {
+        width: 0.72cqw;
+        height: 0.72cqw;
+        min-width: 6px;
+        min-height: 6px;
+        background: var(--gold);
+        transform: rotate(45deg);
+        box-shadow: 0 0 10px rgba(217, 180, 92, 0.8);
+      }
+      .date {
+        --base: 4.55s;
+        --step: 0.11s;
+        margin: 0;
+        font-size: 2.5cqw;
+        font-weight: 500;
+        letter-spacing: 0.34em;
+        text-indent: 0.34em;
+        color: #f3e3b3;
+      }
+      .date .dot { color: var(--gold-bright); }
+
+      /* ---------- Letter-by-letter reveal + gold light sweep ----------
+         JS wraps every character of the text lines in a span.ch.
+         Each letter fades/rises in with a stagger (--base + --i * --step),
+         then a soft gold band sweeps across the letters on a gentle loop:
+         the ::after copy of the glyph carries a moving gradient clipped
+         to the letter shape, phase-shifted per letter so the light
+         travels across the line. */
+      .ch {
+        display: inline-block;
+        position: relative;
+        opacity: 0;
+        transform: translateY(0.32em);
+        filter: blur(3px);
+        animation: charIn 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+        animation-delay: calc(var(--base, 0s) + var(--i, 0) * var(--step, 0.06s));
+      }
+      @keyframes charIn {
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+      .ch::after {
+        content: attr(data-ch);
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: transparent;
+        background-image: linear-gradient(100deg, rgba(255, 233, 168, 0) 38%, rgba(255, 238, 180, 0.95) 50%, rgba(255, 233, 168, 0) 62%);
+        background-size: 300% 100%;
+        background-position: 115% 0;
+        -webkit-background-clip: text;
+        background-clip: text;
+        pointer-events: none;
+        animation: shineSweep 5.2s ease-in-out infinite;
+        animation-delay: calc(var(--base, 0s) + 2.1s + var(--i, 0) * 0.055s);
+      }
+      @keyframes shineSweep {
+        0% { background-position: 115% 0; }
+        38% { background-position: -15% 0; }
+        100% { background-position: -15% 0; }
+      }
+      /* Constellation labels: letters are tspans, revealed one by one */
+      .c-label .lt {
+        opacity: 0;
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      /* ---------- Fullscreen control ---------- */
+      .fs-btn {
+        position: absolute;
+        right: 14px;
+        bottom: 12px;
+        z-index: 5;
+        appearance: none;
+        border: 1px solid rgba(217, 180, 92, 0.35);
+        background: rgba(4, 6, 15, 0.55);
+        color: rgba(248, 242, 226, 0.75);
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 12.5px;
+        letter-spacing: 0.14em;
+        padding: 7px 13px;
+        border-radius: 999px;
+        cursor: pointer;
+        opacity: 0.35;
+        transition: opacity 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+        backdrop-filter: blur(4px);
+      }
+      .fs-btn:hover, .fs-btn:focus-visible {
+        opacity: 1;
+        color: var(--ivory);
+        border-color: var(--gold);
+        outline: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .c-line { stroke-dasharray: 7 9; }
+        .monogram .inf { animation: none; stroke-dashoffset: 0; }
+        .c-star, .c-halo, .c-sparkle, .rise, .monogram .fade-el, .c-label { animation: none; opacity: 1; transform: none; }
+        .ch { animation: none; opacity: 1; transform: none; filter: none; }
+        .ch::after { display: none; }
+        .constellations .c-line { stroke-dasharray: 7 9; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" id="stage" aria-label="Màn sao cưới của Ngọc Thịnh và Châu Khanh, ngày 28 tháng 11">
+      <canvas id="sky"></canvas>
+
+      <svg class="constellations" id="constellations" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <!-- Kim Ngưu (Taurus) — left, geometry traced from the approved
+             frame: the Pleiades cluster sits separate at upper left; below
+             it the Hyades form a wide V with Aldebaran (brightest star,
+             halo + sparkle) at the bottom apex, three stars up each arm,
+             ending in the two horn tips. Nothing hangs below the apex. -->
+        <g id="taurus">
+          <line class="c-line" style="--d:1.15s" x1="253" y1="363" x2="197" y2="309" />
+          <line class="c-line" style="--d:1.5s" x1="197" y1="309" x2="141" y2="252" />
+          <line class="c-line" style="--d:1.85s" x1="141" y1="252" x2="109" y2="179" />
+          <line class="c-line" style="--d:2.2s" x1="253" y1="363" x2="298" y2="310" />
+          <line class="c-line" style="--d:2.55s" x1="298" y1="310" x2="352" y2="266" />
+          <line class="c-line" style="--d:2.9s" x1="352" y1="266" x2="402" y2="180" />
+          <!-- Pleiades cluster: tight knot of small stars, no connecting lines -->
+          <circle class="c-star small" style="--d:1.0s" cx="181" cy="116" r="3.2" />
+          <circle class="c-star small" style="--d:1.06s" cx="163" cy="129" r="2.6" />
+          <circle class="c-star small" style="--d:1.12s" cx="199" cy="125" r="2.8" />
+          <circle class="c-star small" style="--d:1.09s" cx="171" cy="143" r="2.4" />
+          <circle class="c-star small" style="--d:1.15s" cx="195" cy="145" r="2.2" />
+          <circle class="c-star small" style="--d:1.18s" cx="184" cy="133" r="3" />
+          <!-- Hyades V: Aldebaran at the apex is the largest star -->
+          <circle class="c-halo" style="--d:1.1s" cx="253" cy="363" r="18" />
+          <circle class="c-star" style="--d:1.1s" cx="253" cy="363" r="9" />
+          <circle class="c-star" style="--d:1.45s" cx="197" cy="309" r="5.5" />
+          <circle class="c-star" style="--d:1.8s" cx="141" cy="252" r="6" />
+          <circle class="c-star" style="--d:2.15s" cx="109" cy="179" r="7" />
+          <circle class="c-star" style="--d:2.5s" cx="298" cy="310" r="5.5" />
+          <circle class="c-star" style="--d:2.85s" cx="352" cy="266" r="6" />
+          <circle class="c-star" style="--d:3.2s" cx="402" cy="180" r="7" />
+          <g class="c-sparkle" style="--d:1.25s">
+            <line x1="253" y1="335" x2="253" y2="391" />
+            <line x1="225" y1="363" x2="281" y2="363" />
+            <line x1="233" y1="343" x2="273" y2="383" />
+            <line x1="273" y1="343" x2="233" y2="383" />
+          </g>
+          <text class="c-label" style="--d:3.9s; font-size:27px" x="258" y="815">KIM NGƯU</text>
+        </g>
+
+        <!-- Ma Kết (Capricorn) — right, geometry traced from the approved
+             frame: a triangle. The west vertex is the close alpha/beta
+             pair, delta (brightest star, halo + sparkle) is the east
+             vertex, one vertex points south, and each edge carries one
+             mid star. -->
+        <g id="capricorn">
+          <line class="c-line" style="--d:1.15s" x1="1168" y1="263" x2="1198" y2="240" />
+          <line class="c-line" style="--d:1.4s" x1="1198" y1="240" x2="1293" y2="230" />
+          <line class="c-line" style="--d:1.8s" x1="1293" y1="230" x2="1419" y2="212" />
+          <line class="c-line" style="--d:2.2s" x1="1419" y1="212" x2="1432" y2="319" />
+          <line class="c-line" style="--d:2.55s" x1="1432" y1="319" x2="1350" y2="428" />
+          <line class="c-line" style="--d:2.9s" x1="1350" y1="428" x2="1237" y2="351" />
+          <line class="c-line" style="--d:3.2s" x1="1237" y1="351" x2="1168" y2="263" />
+          <!-- west vertex: alpha and beta close together -->
+          <circle class="c-star" style="--d:1.1s" cx="1168" cy="263" r="5" />
+          <circle class="c-star" style="--d:1.2s" cx="1198" cy="240" r="6" />
+          <circle class="c-star" style="--d:1.75s" cx="1293" cy="230" r="5.5" />
+          <!-- delta: bright east vertex -->
+          <circle class="c-halo" style="--d:2.1s" cx="1419" cy="212" r="17" />
+          <circle class="c-star" style="--d:2.1s" cx="1419" cy="212" r="8.5" />
+          <circle class="c-star" style="--d:2.5s" cx="1432" cy="319" r="5" />
+          <circle class="c-star" style="--d:2.85s" cx="1350" cy="428" r="7" />
+          <circle class="c-star" style="--d:3.15s" cx="1237" cy="351" r="5" />
+          <g class="c-sparkle" style="--d:2.25s">
+            <line x1="1419" y1="184" x2="1419" y2="240" />
+            <line x1="1391" y1="212" x2="1447" y2="212" />
+            <line x1="1399" y1="192" x2="1439" y2="232" />
+            <line x1="1439" y1="192" x2="1399" y2="232" />
+          </g>
+          <text class="c-label" style="--d:3.9s; font-size:27px" x="1360" y="815">MA KẾT</text>
+        </g>
+      </svg>
+
+      <div class="center">
+        <svg class="monogram rise" style="--d:0.3s" viewBox="0 0 240 120" aria-hidden="true">
+          <path class="inf" pathLength="1" d="M120 60 C 96 22, 46 22, 40 56 C 36 82, 66 100, 88 88 C 102 80, 138 40, 152 32 C 174 20, 204 38, 200 64 C 194 98, 144 98, 120 60 Z" />
+          <text class="fade-el" x="76" y="70">T</text>
+          <text class="fade-el" x="164" y="70">K</text>
+          <path class="fade-el" fill="#f0d48a" d="M120 69 C 109 58, 104 50, 109.5 44.5 C 114 40, 119.5 43, 120 47.5 C 120.5 43, 126 40, 130.5 44.5 C 136 50, 131 58, 120 69 Z" />
+        </svg>
+
+        <p class="eyebrow type">The Wedding Of</p>
+        <h1 class="names type">Ngọc Thịnh <span class="amp">♡</span> Châu Khanh</h1>
+        <div class="divider rise" style="--d:4.1s"><span class="diamond"></span></div>
+        <p class="date type">28<span class="dot">.</span>11</p>
+      </div>
+
+      <button class="fs-btn" id="fsBtn" type="button">Toàn màn hình</button>
+    </main>
+
+    <script>
+      (function () {
+        var stage = document.getElementById("stage");
+        var canvas = document.getElementById("sky");
+        var ctx = canvas.getContext("2d");
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        var W = 0, H = 0, stars = [], meteors = [];
+        var DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+        function resize() {
+          var r = stage.getBoundingClientRect();
+          W = r.width; H = r.height;
+          canvas.width = Math.round(W * DPR);
+          canvas.height = Math.round(H * DPR);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          buildStars();
+          if (reduceMotion) drawStatic();
+        }
+
+        function buildStars() {
+          stars = [];
+          var count = Math.round((W * H) / 4200);
+          for (var i = 0; i < count; i++) {
+            var roll = Math.random();
+            /* tier 2 = bright hero stars with a visible 4-point sparkle shape */
+            var tier = roll < 0.62 ? 0 : roll < 0.9 ? 1 : 2;
+            stars.push({
+              x: Math.random() * W,
+              y: Math.random() * H,
+              r: tier === 0 ? Math.random() * 0.9 + 0.4 : tier === 1 ? Math.random() * 0.8 + 1.1 : Math.random() * 0.7 + 1.7,
+              base: tier === 0 ? Math.random() * 0.3 + 0.42 : Math.random() * 0.25 + 0.6,
+              amp: tier === 0 ? Math.random() * 0.3 + 0.22 : Math.random() * 0.28 + 0.3,
+              speed: Math.random() * 1.6 + 0.5,
+              phase: Math.random() * Math.PI * 2,
+              warm: Math.random() < 0.25,
+              tier: tier
+            });
+          }
+        }
+
+        function drawStars(t) {
+          for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            var tw = 0.5 + 0.5 * Math.sin(t * 0.001 * s.speed + s.phase); /* 0..1 */
+            var a = s.base - s.amp + tw * s.amp * 2;
+            if (a < 0.06) a = 0.06;
+            if (a > 1) a = 1;
+            var col = s.warm ? "255,233,184" : "232,238,255";
+
+            if (s.tier === 2) {
+              /* soft halo that breathes with the twinkle */
+              var haloR = s.r * (3.4 + tw * 2.2);
+              var halo = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, haloR);
+              halo.addColorStop(0, "rgba(" + col + "," + 0.34 * a + ")");
+              halo.addColorStop(1, "rgba(" + col + ",0)");
+              ctx.globalAlpha = 1;
+              ctx.fillStyle = halo;
+              ctx.beginPath();
+              ctx.arc(s.x, s.y, haloR, 0, Math.PI * 2);
+              ctx.fill();
+
+              /* 4-point sparkle cross, longest at the twinkle peak */
+              var spike = s.r * (3.2 + tw * 4.6);
+              var diag = spike * 0.42;
+              ctx.globalAlpha = a;
+              ctx.strokeStyle = "rgba(" + col + ",0.95)";
+              ctx.lineWidth = 1.3;
+              ctx.lineCap = "round";
+              ctx.beginPath();
+              ctx.moveTo(s.x - spike, s.y); ctx.lineTo(s.x + spike, s.y);
+              ctx.moveTo(s.x, s.y - spike); ctx.lineTo(s.x, s.y + spike);
+              ctx.moveTo(s.x - diag, s.y - diag); ctx.lineTo(s.x + diag, s.y + diag);
+              ctx.moveTo(s.x - diag, s.y + diag); ctx.lineTo(s.x + diag, s.y - diag);
+              ctx.stroke();
+            } else if (s.tier === 1) {
+              ctx.shadowBlur = 7 + tw * 9;
+              ctx.shadowColor = "rgba(" + col + ",0.9)";
+            } else {
+              ctx.shadowBlur = 0;
+            }
+
+            ctx.globalAlpha = a;
+            ctx.fillStyle = "rgb(" + col + ")";
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        function spawnMeteor() {
+          var fromLeft = Math.random() < 0.5;
+          meteors.push({
+            x: fromLeft ? Math.random() * W * 0.4 : W * 0.5 + Math.random() * W * 0.4,
+            y: Math.random() * H * 0.3,
+            vx: (fromLeft ? 1 : -1) * (5.5 + Math.random() * 3),
+            vy: 3.2 + Math.random() * 1.6,
+            life: 1
+          });
+        }
+
+        function drawMeteors() {
+          for (var i = meteors.length - 1; i >= 0; i--) {
+            var m = meteors[i];
+            var tail = 17;
+            var grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * tail, m.y - m.vy * tail);
+            grad.addColorStop(0, "rgba(255,246,221," + 0.95 * m.life + ")");
+            grad.addColorStop(1, "rgba(255,246,221,0)");
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(m.x, m.y);
+            ctx.lineTo(m.x - m.vx * tail, m.y - m.vy * tail);
+            ctx.stroke();
+            m.x += m.vx;
+            m.y += m.vy;
+            m.life -= 0.011;
+            if (m.life <= 0 || m.x < -80 || m.x > W + 80 || m.y > H + 40) meteors.splice(i, 1);
+          }
+        }
+
+        function drawStatic() {
+          ctx.clearRect(0, 0, W, H);
+          drawStars(1200);
+        }
+
+        var nextMeteor = 2600;
+        function frame(t) {
+          ctx.clearRect(0, 0, W, H);
+          drawStars(t);
+          if (t > nextMeteor) {
+            spawnMeteor();
+            nextMeteor = t + 3000 + Math.random() * 3000;
+          }
+          drawMeteors();
+          requestAnimationFrame(frame);
+        }
+
+        resize();
+        window.addEventListener("resize", resize);
+        if (!reduceMotion) requestAnimationFrame(frame);
+
+        /* Constellation draw-in: hide each line behind its own length,
+           play the draw, then swap to the dashed look */
+        var svg = document.getElementById("constellations");
+        var cLines = svg.querySelectorAll(".c-line");
+        if (!reduceMotion) {
+          for (var i = 0; i < cLines.length; i++) {
+            var len = cLines[i].getTotalLength();
+            cLines[i].style.strokeDasharray = len;
+            cLines[i].style.strokeDashoffset = len;
+          }
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { svg.classList.add("play"); });
+          });
+          setTimeout(function () {
+            for (var j = 0; j < cLines.length; j++) {
+              cLines[j].style.strokeDasharray = "";
+              cLines[j].style.strokeDashoffset = "";
+            }
+            svg.classList.add("is-drawn");
+          }, 4900);
+        } else {
+          svg.classList.add("is-drawn");
+        }
+
+        /* Letter-by-letter text: wrap every character of the text lines
+           in a span.ch (nested spans like the ♡ and the date dot keep
+           their own styling), and split the SVG constellation labels
+           into one tspan per letter. Skipped under reduced motion, where
+           the lines simply show as-is. */
+        function splitLetters(el) {
+          var idx = 0;
+          (function walk(node) {
+            var children = Array.prototype.slice.call(node.childNodes);
+            for (var c = 0; c < children.length; c++) {
+              var child = children[c];
+              if (child.nodeType === 3) {
+                var frag = document.createDocumentFragment();
+                child.textContent.split("").forEach(function (ch) {
+                  var s = document.createElement("span");
+                  s.className = "ch";
+                  s.style.setProperty("--i", idx++);
+                  var glyph = ch === " " ? " " : ch;
+                  s.textContent = glyph;
+                  s.setAttribute("data-ch", glyph);
+                  frag.appendChild(s);
+                });
+                node.replaceChild(frag, child);
+              } else if (child.nodeType === 1) {
+                walk(child);
+              }
+            }
+          })(el);
+        }
+
+        if (!reduceMotion) {
+          var typeEls = document.querySelectorAll(".type");
+          for (var t = 0; t < typeEls.length; t++) splitLetters(typeEls[t]);
+
+          var labels = svg.querySelectorAll(".c-label");
+          for (var l = 0; l < labels.length; l++) {
+            (function (label) {
+              var base = parseFloat(label.style.getPropertyValue("--d")) || 3.9;
+              var text = label.textContent;
+              label.textContent = "";
+              label.style.animation = "none";
+              label.style.opacity = "1";
+              text.split("").forEach(function (ch, i) {
+                var ts = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+                ts.setAttribute("class", "lt");
+                ts.style.animationDelay = (base + i * 0.08).toFixed(2) + "s";
+                ts.textContent = ch === " " ? " " : ch;
+                label.appendChild(ts);
+              });
+            })(labels[l]);
+          }
+        }
+
+        /* Fullscreen toggle for LED projection */
+        var fsBtn = document.getElementById("fsBtn");
+        fsBtn.addEventListener("click", function () {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else if (stage.requestFullscreen) {
+            stage.requestFullscreen();
+          }
+        });
+        document.addEventListener("fullscreenchange", function () {
+          fsBtn.textContent = document.fullscreenElement ? "Thoát toàn màn hình" : "Toàn màn hình";
+          setTimeout(resize, 60);
+        });
+      })();
+    </script>
+  </body>
+</html>
